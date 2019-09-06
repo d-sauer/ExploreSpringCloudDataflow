@@ -1,0 +1,3 @@
+// Opens module/package for tests only for Spring reflection
+--add-opens
+  ds.test.sandbox/ds.test.sandbox=org.junit.platform.commons,spring.core,spring.beans,spring.context

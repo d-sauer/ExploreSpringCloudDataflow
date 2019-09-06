@@ -1,0 +1,90 @@
+plugins {
+	id 'org.springframework.boot' version '2.1.7.RELEASE'
+	id 'java'
+	id "org.javamodularity.moduleplugin" version "1.5.0"
+}
+
+apply plugin: 'io.spring.dependency-management'
+
+group = 'ds.test'
+version = '0.0.1-SNAPSHOT'
+sourceCompatibility = '12'
+targetCompatibility = '12'
+
+configurations {
+	developmentOnly
+	runtimeClasspath {
+		extendsFrom developmentOnly
+	}
+	compileOnly {
+		extendsFrom annotationProcessor
+	}
+}
+
+repositories {
+	mavenCentral()
+}
+
+dependencies {
+	implementation 'org.springframework.boot:spring-boot-starter-actuator'
+	implementation 'org.springframework.boot:spring-boot-starter-web'
+
+	developmentOnly 'org.springframework.boot:spring-boot-devtools'
+
+	annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
+
+	testImplementation 'org.junit.jupiter:junit-jupiter:5.5.1'
+	testImplementation ("org.springframework.boot:spring-boot-starter-test") {
+		exclude group: 'org.hamcrest'
+		exclude group: 'org.skyscreamer'
+	}
+	testImplementation 'org.hamcrest:hamcrest-core:2.1'
+}
+
+bootRun {
+	jvmArgs '--show-module-resolution'
+	if (project.hasProperty('args')) {  // -Pargs="arg1 arg2"
+		args project.args.split('\\s+')   //  Apply arguments for main method
+	}
+
+	// -Pjms    Enable JavaMission Control recording
+	if (project.hasProperty('jmc')) {  // -Pjmc
+		jvmArgs '-Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.port=8999',
+				'-Dcom.sun.management.jmxremote.ssl=false',
+				'-Dcom.sun.management.jmxremote.authenticate=false',
+				'-XX:+UnlockCommercialFeatures',
+				'-XX:+FlightRecorder',
+				"-XX:FlightRecorderOptions=defaultrecording=true,dumponexit=true,dumponexitpath=$buildDir/flightRecorderResult.jfr"
+	}
+}
+
+test {
+	useJUnitPlatform()
+	testLogging {
+		events "passed", "skipped", "failed"
+	}
+}
+
+task sourcesJar(type: Jar) {
+	from sourceSets.main.allJava
+	archiveClassifier = 'sources'
+}
+
+task javadocJar(type: Jar) {
+	from javadoc
+	archiveClassifier = 'javadoc'
+}
+
+javadoc {
+	if(JavaVersion.current().isJava9Compatible()) {
+		options.addBooleanOption('html5', true)
+	}
+}
+
+springBoot {
+	buildInfo()
+}
+
+bootJar {
+	launchScript()
+}

@@ -1,11 +1,13 @@
 plugins {
 	id 'org.springframework.boot' version '2.1.6.RELEASE'
 	id 'java'
+	id 'maven-publish'
+	id 'signing'
 }
 
 apply plugin: 'io.spring.dependency-management'
 
-group = 'io.spring.dataflow.sample'
+group = 'org.ds.dataflow.sample'
 version = '0.0.1-SNAPSHOT'
 sourceCompatibility = '1.8'
 
@@ -41,5 +43,50 @@ test {
 	useJUnitPlatform()
 	testLogging {
 		events "passed", "skipped", "failed"
+	}
+}
+
+task sourcesJar(type: Jar) {
+	from sourceSets.main.allJava
+	archiveClassifier = 'sources'
+}
+
+task javadocJar(type: Jar) {
+	from javadoc
+	archiveClassifier = 'javadoc'
+}
+
+publishing {
+	publications {
+		mavenJava(MavenPublication) {
+			from components.java
+			artifact sourcesJar
+			artifact javadocJar
+			versionMapping {
+				usage('java-api') {
+					fromResolutionOf('runtimeClasspath')
+				}
+				usage('java-runtime') {
+					fromResolutionResult()
+				}
+			}
+		}
+	}
+	repositories {
+		maven {
+			name "S3"
+			url "s3://davorpublic/maven"
+			credentials(AwsCredentials) {
+				accessKey "AKIAQ4RZ5646BBZOYVXT"
+				secretKey "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"
+			}
+		}
+	}
+}
+
+
+javadoc {
+	if(JavaVersion.current().isJava9Compatible()) {
+		options.addBooleanOption('html5', true)
 	}
 }
